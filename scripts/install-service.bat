@@ -14,15 +14,29 @@ if %errorLevel% neq 0 (
     exit /b 1
 )
 
+:: 获取脚本所在目录的上级目录（因为脚本在scripts子目录中）
+set "SCRIPT_DIR=%~dp0"
+set "ROOT_DIR=%SCRIPT_DIR%..\"
+cd /d "%ROOT_DIR%"
+
 set "SERVICE_NAME=ASS-RI"
 set "DISPLAY_NAME=ASS-RI AI Inference Service"
 set "DESCRIPTION=ASS-RI Windows AI Inference Service - Provides AI model inference capabilities"
-set "EXE_PATH=%~dp0ASS-RI.exe"
+set "EXE_PATH=%CD%\ASS-RI.exe"
 
+echo 当前目录: %CD%
 echo 服务名称: %SERVICE_NAME%
 echo 显示名称: %DISPLAY_NAME%
 echo 程序路径: %EXE_PATH%
 echo.
+
+:: 检查程序文件是否存在
+if not exist "%EXE_PATH%" (
+    echo [错误] 找不到程序文件: %EXE_PATH%
+    echo 请确保ASS-RI.exe存在于当前目录
+    pause
+    exit /b 1
+)
 
 :: 检查服务是否已存在
 sc query %SERVICE_NAME% >nul 2>&1
@@ -74,9 +88,13 @@ if %errorLevel% equ 0 (
     echo.
     echo 服务状态:
     sc query %SERVICE_NAME% | findstr "STATE"
+    echo.
+    echo 访问 http://localhost:5000 验证服务
 ) else (
     echo [错误] 服务启动失败！
+    echo 请检查日志: data\logs\ASS-RI-Errors-*.log
 )
 
 echo.
-pause
+echo 按任意键退出...
+pause >nul

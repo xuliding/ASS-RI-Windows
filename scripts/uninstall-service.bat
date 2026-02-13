@@ -23,7 +23,9 @@ echo.
 sc query %SERVICE_NAME% >nul 2>&1
 if %errorLevel% neq 0 (
     echo [提示] 服务不存在，无需卸载
-    pause
+    echo.
+    echo 按任意键退出...
+    pause >nul
     exit /b 0
 )
 
@@ -45,4 +47,5 @@ if %errorLevel% equ 0 (
 )
 
 echo.
-pause
+echo 按任意键退出...
+pause >nul
