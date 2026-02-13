@@ -1,0 +1,16 @@
+{
+  "ServicePort": 5000,
+  "ModelDirectory": "F:\\modelscope",
+  "LogLevel": "Information",
+  "ApiKey": null,
+  "RateLimit": {
+    "Enabled": true,
+    "RequestsPerSecond": 10,
+    "BurstSize": 20
+  },
+  "Alert": null,
+  "Engines": {},
+  "GPU": {
+    "Enabled": true
+  }
+}
