@@ -1,0 +1,1058 @@
+{
+  "api_version": "1.0",
+  "generated_at": "2026-02-13T12:00:00Z",
+  "description": "ASS-RI系统内外部服务接口定义 - 基于代码实现",
+  "external_apis": [
+    {
+      "controller": "ChatCompletionsController",
+      "base_path": "/v1/chat/completions",
+      "description": "聊天完成接口，支持多轮对话",
+      "endpoints": [
+        {
+          "path": "/v1/chat/completions",
+          "method": "POST",
+          "description": "创建聊天完成",
+          "request": {
+            "content_type": "application/json",
+            "body": {
+              "model": "string (required) - 模型标识",
+              "messages": "array (required) - 消息列表 [{role, content}]",
+              "temperature": "number - 温度参数 (0.0-2.0, default: 0.7)",
+              "max_tokens": "integer - 最大生成token数",
+              "top_p": "number - 核采样参数",
+              "frequency_penalty": "number - 频率惩罚",
+              "presence_penalty": "number - 存在惩罚",
+              "stream": "boolean - 是否流式输出"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "model": "string - 使用的模型",
+                "choices": "array - 生成结果 [{index, message, finish_reason}]",
+                "usage": "object - token用量 {prompt_tokens, completion_tokens, total_tokens}"
+              }
+            },
+            "error": {
+              "status_codes": [400, 500],
+              "body": {
+                "error": {
+                  "code": "string - 错误代码",
+                  "message": "string - 错误信息",
+                  "type": "string - 错误类型",
+                  "windows_error_code": "integer - Windows错误码"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "controller": "CompletionsController",
+      "base_path": "/v1/completions",
+      "description": "文本补全接口，基于提示词生成文本",
+      "endpoints": [
+        {
+          "path": "/v1/completions",
+          "method": "POST",
+          "description": "创建文本完成",
+          "request": {
+            "content_type": "application/json",
+            "body": {
+              "model": "string (required) - 模型标识",
+              "prompt": "string (required) - 输入提示词",
+              "max_tokens": "integer - 最大生成token数",
+              "temperature": "number - 温度参数",
+              "top_p": "number - 核采样参数",
+              "stop": "array - 停止序列"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "model": "string",
+                "choices": "array [{text, index, finish_reason}]",
+                "usage": "object {prompt_tokens, completion_tokens, total_tokens}",
+                "windows_metrics": "object {processor_time_ms, working_set_mb, gpu_engine_utilization}",
+                "security_context": "object {user, session_id, integrity_level}"
+              }
+            },
+            "error": {
+              "status_codes": [400, 500]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "controller": "ModelsController",
+      "base_path": "/v1/models",
+      "description": "模型管理接口，支持模型列表查询和加载卸载",
+      "endpoints": [
+        {
+          "path": "/v1/models",
+          "method": "GET",
+          "description": "列出所有可用模型",
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "object": "list",
+                "data": "array<ModelInfo> - 模型列表"
+              }
+            }
+          }
+        },
+        {
+          "path": "/v1/models/{modelId}",
+          "method": "GET",
+          "description": "获取模型详细信息",
+          "parameters": {
+            "path": {
+              "modelId": "string (required) - 模型ID"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "id": "string",
+                "name": "string",
+                "format": "string - 模型格式",
+                "version": "string",
+                "status": "string - 模型状态 (ready/not_loaded)",
+                "specs": "object {context_size, vocab_size, architecture}",
+                "resources": "object {gpu_id, vram_used, strategy}",
+                "paths": "object {model, config}",
+                "windows_security": "object {owner, acl}"
+              }
+            },
+            "error": {
+              "status_code": 500
+            }
+          }
+        },
+        {
+          "path": "/v1/models/{modelId}/load",
+          "method": "POST",
+          "description": "加载指定模型到内存",
+          "parameters": {
+            "path": {
+              "modelId": "string (required) - 模型ID"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": "ModelInfo"
+            }
+          }
+        },
+        {
+          "path": "/v1/models/{modelId}/unload",
+          "method": "POST",
+          "description": "卸载指定模型释放资源",
+          "parameters": {
+            "path": {
+              "modelId": "string (required) - 模型ID"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": "ModelInfo"
+            }
+          }
+        },
+        {
+          "path": "/v1/models/{modelId}/status",
+          "method": "GET",
+          "description": "获取模型加载状态",
+          "parameters": {
+            "path": {
+              "modelId": "string (required) - 模型ID"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200
+            }
+          }
+        },
+        {
+          "path": "/v1/models/unload-all",
+          "method": "POST",
+          "description": "卸载所有已加载模型",
+          "response": {
+            "success": {
+              "status_code": 200
+            }
+          }
+        }
+      ]
+    },
+    {
+      "controller": "EngineController",
+      "base_path": "/v1/engines",
+      "description": "推理引擎管理接口，支持引擎注册、心跳、健康检查",
+      "endpoints": [
+        {
+          "path": "/v1/engines/register",
+          "method": "POST",
+          "description": "注册推理引擎",
+          "request": {
+            "content_type": "application/json",
+            "body": {
+              "Id": "string (required) - 引擎唯一标识",
+              "Name": "string - 引擎名称",
+              "Version": "string - 版本号",
+              "Formats": "array - 支持的模型格式",
+              "Endpoint": "string (required) - 服务端点URL",
+              "HealthEndpoint": "string - 健康检查端点",
+              "Capabilities": "object - 能力描述 {MaxBatchSize, MaxTokens, SupportsStreaming, GpuEnabled, MemoryRequirement}",
+              "Status": "string - 初始状态"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "success": "boolean",
+                "message": "string",
+                "engine_id": "string"
+              }
+            },
+            "error": {
+              "status_codes": [400, 500]
+            }
+          }
+        },
+        {
+          "path": "/v1/engines/{engineId}/heartbeat",
+          "method": "POST",
+          "description": "接收引擎心跳上报",
+          "parameters": {
+            "path": {
+              "engineId": "string (required) - 引擎ID"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "success": "boolean",
+                "message": "string"
+              }
+            }
+          }
+        },
+        {
+          "path": "/v1/engines",
+          "method": "GET",
+          "description": "获取所有已注册引擎",
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "engines": "array<EngineInfo>",
+                "total": "integer"
+              }
+            }
+          }
+        },
+        {
+          "path": "/v1/engines/available",
+          "method": "GET",
+          "description": "获取健康状态的可用引擎",
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "engines": "array<EngineInfo>",
+                "total": "integer"
+              }
+            }
+          }
+        },
+        {
+          "path": "/v1/engines/format/{format}",
+          "method": "GET",
+          "description": "根据模型格式获取支持的引擎",
+          "parameters": {
+            "path": {
+              "format": "string (required) - 模型格式 (safetensors/pytorch/onnx/gguf)"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "engines": "array<EngineInfo>",
+                "total": "integer",
+                "format": "string"
+              }
+            }
+          }
+        },
+        {
+          "path": "/v1/engines/{engineId}",
+          "method": "GET",
+          "description": "获取引擎详细信息",
+          "parameters": {
+            "path": {
+              "engineId": "string (required) - 引擎ID"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": "EngineInfo"
+            },
+            "error": {
+              "status_code": 404
+            }
+          }
+        },
+        {
+          "path": "/v1/engines/{engineId}",
+          "method": "DELETE",
+          "description": "移除指定引擎",
+          "parameters": {
+            "path": {
+              "engineId": "string (required) - 引擎ID"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "success": "boolean",
+                "message": "string"
+              }
+            }
+          }
+        },
+        {
+          "path": "/v1/engines/check-health",
+          "method": "POST",
+          "description": "执行所有引擎健康检查",
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "success": "boolean",
+                "message": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "controller": "RoutingController",
+      "base_path": "/v1/routing",
+      "description": "路由管理接口，支持引擎推荐和策略配置",
+      "endpoints": [
+        {
+          "path": "/v1/routing/policy",
+          "method": "GET",
+          "description": "获取当前路由策略",
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "object": "routing_policy",
+                "data": {
+                  "default_strategy": "string - 默认策略",
+                  "strategies": "object - 策略配置",
+                  "format_mapping": "object - 格式到引擎的映射"
+                },
+                "timestamp": "integer"
+              }
+            }
+          }
+        },
+        {
+          "path": "/v1/routing/policy",
+          "method": "PUT",
+          "description": "更新路由策略",
+          "request": {
+            "content_type": "application/json",
+            "body": {
+              "default_strategy": "string - 默认策略名称",
+              "strategies": "object - 策略配置对象"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "success": "boolean",
+                "message": "string",
+                "timestamp": "integer"
+              }
+            }
+          }
+        },
+        {
+          "path": "/v1/routing/recommend",
+          "method": "POST",
+          "description": "获取推荐引擎",
+          "request": {
+            "content_type": "application/json",
+            "body": {
+              "model_id": "string (required) - 模型ID",
+              "model_format": "string (required) - 模型格式",
+              "task_type": "string - 任务类型",
+              "requirements": "object - 需求 {low_latency, high_throughput}",
+              "context": "object - 上下文 {batch_size}"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "object": "engine_recommendation",
+                "data": {
+                  "recommended_engine": "string - 推荐引擎ID",
+                  "reasoning": "string - 推荐理由",
+                  "alternatives": "array - 备选引擎ID列表",
+                  "estimated_performance": "object {latency_ms, throughput}"
+                },
+                "timestamp": "integer"
+              }
+            },
+            "error": {
+              "status_code": 404
+            }
+          }
+        }
+      ]
+    },
+    {
+      "controller": "ConfigController",
+      "base_path": "/v1/config",
+      "description": "配置管理接口，支持模型目录和引擎配置查询",
+      "endpoints": [
+        {
+          "path": "/v1/config/models",
+          "method": "GET",
+          "description": "获取模型目录配置",
+          "parameters": {
+            "query": {
+              "engine_type": "string - 引擎类型筛选",
+              "format": "string - 格式筛选"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "object": "config",
+                "data": {
+                  "model_dirs": "object - 模型目录映射",
+                  "formats": "array - 支持的格式列表",
+                  "engine_specific": "object - 引擎特定配置"
+                },
+                "timestamp": "integer",
+                "windows_context": "object {process_id}"
+              }
+            }
+          }
+        },
+        {
+          "path": "/v1/config/engine/{engine_type}",
+          "method": "GET",
+          "description": "获取引擎特定配置",
+          "parameters": {
+            "path": {
+              "engine_type": "string (required) - 引擎类型 (pytorch/onnx)"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "object": "engine_config",
+                "data": {
+                  "engine_type": "string",
+                  "model_dir": "string - 模型目录路径",
+                  "supported_formats": "array - 支持的格式",
+                  "capabilities": "object {max_batch_size, max_tokens, supports_streaming, gpu_enabled}",
+                  "windows_options": "object {process_priority, use_large_pages}"
+                },
+                "timestamp": "integer"
+              }
+            },
+            "error": {
+              "status_code": 400
+            }
+          }
+        }
+      ]
+    },
+    {
+      "controller": "SystemController",
+      "base_path": "/v1/system",
+      "description": "系统信息接口，支持硬件资源监控",
+      "endpoints": [
+        {
+          "path": "/v1/system/info",
+          "method": "GET",
+          "description": "获取系统基本信息",
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "object": "system_info",
+                "data": {
+                  "hostName": "string - 主机名",
+                  "osName": "string - 操作系统名称",
+                  "osVersion": "string - 操作系统版本",
+                  "processorCount": "integer - 处理器数量",
+                  "is64Bit": "boolean - 是否64位系统",
+                  "machineName": "string - 机器名",
+                  "userName": "string - 用户名",
+                  "domainName": "string - 域名",
+                  "systemDirectory": "string - 系统目录",
+                  "tickCount": "integer - 系统运行时间",
+                  "workingSet": "long - 工作集内存",
+                  "uptime": "string - 系统启动时长"
+                }
+              }
+            }
+          }
+        },
+        {
+          "path": "/v1/system/gpu",
+          "method": "GET",
+          "description": "获取GPU状态信息",
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "object": "gpu_status",
+                "data": "array<GpuInfo> - GPU信息列表"
+              }
+            }
+          }
+        },
+        {
+          "path": "/v1/system/cpu",
+          "method": "GET",
+          "description": "获取CPU状态信息",
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "object": "cpu_status",
+                "data": {
+                  "name": "string - CPU名称",
+                  "numberOfCores": "integer - 核心数",
+                  "numberOfLogicalProcessors": "integer - 逻辑处理器数",
+                  "maxClockSpeed": "integer - 最大频率(MHz)",
+                  "cpuUsage": "double - CPU使用率"
+                }
+              }
+            }
+          }
+        },
+        {
+          "path": "/v1/system/memory",
+          "method": "GET",
+          "description": "获取内存状态信息",
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "object": "memory_status",
+                "data": {
+                  "totalPhysicalMemory": "double - 总物理内存(MB)",
+                  "freePhysicalMemory": "double - 可用物理内存(MB)",
+                  "totalVirtualMemory": "double - 总虚拟内存(MB)",
+                  "freeVirtualMemory": "double - 可用虚拟内存(MB)"
+                }
+              }
+            }
+          }
+        },
+        {
+          "path": "/v1/system/disk",
+          "method": "GET",
+          "description": "获取磁盘状态信息",
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "object": "disk_status",
+                "data": "array<DiskInfo> - 磁盘信息列表"
+              }
+            }
+          }
+        },
+        {
+          "path": "/v1/system/network",
+          "method": "GET",
+          "description": "获取网络状态信息",
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "object": "network_status",
+                "data": "array<NetworkInfo> - 网络接口列表"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "controller": "WindowsController",
+      "base_path": "/v1/windows",
+      "description": "Windows系统集成接口",
+      "endpoints": [
+        {
+          "path": "/system/info",
+          "method": "GET",
+          "description": "获取Windows系统详细信息",
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "success": "boolean",
+                "data": {
+                  "os_version": "string - OS版本",
+                  "os_full_name": "string - OS完整名称",
+                  "computer_name": "string - 计算机名",
+                  "user_name": "string - 用户名",
+                  "total_memory": "string - 总内存",
+                  "available_memory": "string - 可用内存",
+                  "processor_count": "integer - 处理器数量",
+                  "system_directory": "string - 系统目录",
+                  "windows_directory": "string - Windows目录",
+                  "dotnet_version": "string - .NET版本"
+                },
+                "message": "string"
+              }
+            }
+          }
+        },
+        {
+          "path": "/service/manage",
+          "method": "POST",
+          "description": "管理Windows服务 (安装/卸载/启动/停止/重启)",
+          "request": {
+            "content_type": "application/json",
+            "body": {
+              "Action": "string (required) - 操作类型 (install/uninstall/start/stop/restart)",
+              "ServiceName": "string - 服务名称"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "success": "boolean",
+                "message": "string"
+              }
+            },
+            "error": {
+              "status_code": 400
+            }
+          }
+        },
+        {
+          "path": "/service/status",
+          "method": "GET",
+          "description": "获取Windows服务状态",
+          "parameters": {
+            "query": {
+              "service_name": "string - 服务名称 (default: ASS-RI-Service)"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "success": "boolean",
+                "data": {
+                  "service_name": "string",
+                  "display_name": "string",
+                  "description": "string",
+                  "exists": "boolean",
+                  "status": "string - 服务状态",
+                  "status_code": "integer",
+                  "can_stop": "boolean",
+                  "can_pause_and_continue": "boolean"
+                },
+                "message": "string"
+              }
+            }
+          }
+        },
+        {
+          "path": "/services/list",
+          "method": "GET",
+          "description": "获取Windows服务列表",
+          "parameters": {
+            "query": {
+              "status": "string - 状态筛选"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200
+            }
+          }
+        },
+        {
+          "path": "/system/action",
+          "method": "POST",
+          "description": "执行系统操作 (重启/关机)",
+          "request": {
+            "content_type": "application/json",
+            "body": {
+              "Action": "string (required) - 操作 (restart/shutdown/abort_shutdown)",
+              "TimeoutSeconds": "integer - 超时时间(秒)",
+              "Reason": "string - 操作原因",
+              "Force": "boolean - 是否强制"
+            }
+          },
+          "response": {
+            "success": {
+              "status_code": 200,
+              "body": {
+                "success": "boolean",
+                "message": "string"
+              }
+            },
+            "error": {
+              "status_code": 400
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "internal_services": [
+    {
+      "service": "EngineManager",
+      "description": "引擎管理核心服务",
+      "methods": [
+        {
+          "name": "RegisterEngine",
+          "description": "注册推理引擎",
+          "parameters": {
+            "request": "EngineRegistrationRequest"
+          },
+          "return_type": "Task<EngineRegistrationResult>"
+        },
+        {
+          "name": "SendHeartbeat",
+          "description": "处理引擎心跳",
+          "parameters": {
+            "engineId": "string"
+          },
+          "return_type": "Task<HeartbeatResult>"
+        },
+        {
+          "name": "GetAllEngines",
+          "description": "获取所有已注册引擎",
+          "return_type": "List<EngineInfo>"
+        },
+        {
+          "name": "GetAvailableEngines",
+          "description": "获取健康状态的可用引擎",
+          "return_type": "List<EngineInfo>"
+        },
+        {
+          "name": "GetEnginesByFormat",
+          "description": "根据模型格式获取引擎",
+          "parameters": {
+            "format": "string"
+          },
+          "return_type": "List<EngineInfo>"
+        },
+        {
+          "name": "GetEngine",
+          "description": "获取指定引擎信息",
+          "parameters": {
+            "engineId": "string"
+          },
+          "return_type": "EngineInfo"
+        },
+        {
+          "name": "RemoveEngine",
+          "description": "移除引擎",
+          "parameters": {
+            "engineId": "string"
+          },
+          "return_type": "void"
+        },
+        {
+          "name": "CheckEngineHealth",
+          "description": "检查所有引擎健康状态",
+          "return_type": "Task"
+        }
+      ]
+    },
+    {
+      "service": "ISystemInfoService",
+      "description": "系统信息服务接口",
+      "methods": [
+        {
+          "name": "GetSystemInfo",
+          "description": "获取系统基本信息",
+          "return_type": "SystemInfo"
+        },
+        {
+          "name": "GetGpuInfo",
+          "description": "获取GPU信息",
+          "return_type": "GpuInfo[]"
+        },
+        {
+          "name": "GetCpuInfo",
+          "description": "获取CPU信息",
+          "return_type": "CpuInfo"
+        },
+        {
+          "name": "GetMemoryInfo",
+          "description": "获取内存信息",
+          "return_type": "MemoryInfo"
+        },
+        {
+          "name": "GetDiskInfo",
+          "description": "获取磁盘信息",
+          "return_type": "DiskInfo[]"
+        },
+        {
+          "name": "GetNetworkInfo",
+          "description": "获取网络信息",
+          "return_type": "NetworkInfo[]"
+        }
+      ]
+    },
+    {
+      "service": "ConfigManager",
+      "description": "配置管理服务",
+      "methods": [
+        {
+          "name": "LoadConfig<T>",
+          "description": "加载配置文件",
+          "parameters": {
+            "fileName": "string"
+          },
+          "return_type": "T"
+        },
+        {
+          "name": "GetModelPath",
+          "description": "获取模型路径",
+          "parameters": {
+            "modelId": "string",
+            "format": "string"
+          },
+          "return_type": "string"
+        },
+        {
+          "name": "GetCachePath",
+          "description": "获取缓存路径",
+          "parameters": {
+            "cacheType": "string"
+          },
+          "return_type": "string"
+        },
+        {
+          "name": "GetLogPath",
+          "description": "获取日志路径",
+          "parameters": {
+            "logType": "string"
+          },
+          "return_type": "string"
+        }
+      ]
+    }
+  ],
+  "data_models": [
+    {
+      "name": "ChatCompletionRequest",
+      "description": "聊天完成请求",
+      "fields": {
+        "model": "string (required)",
+        "messages": "List<Message> (required) - [{role, content}]",
+        "temperature": "double? - default: 0.7",
+        "max_tokens": "int?",
+        "top_p": "double?",
+        "frequency_penalty": "double?",
+        "presence_penalty": "double?",
+        "stream": "bool? - default: false"
+      }
+    },
+    {
+      "name": "ChatCompletionResponse",
+      "description": "聊天完成响应",
+      "fields": {
+        "model": "string",
+        "choices": "List<ChatCompletionChoice>",
+        "usage": "Usage - {prompt_tokens, completion_tokens, total_tokens}"
+      }
+    },
+    {
+      "name": "CompletionRequest",
+      "description": "文本完成请求",
+      "fields": {
+        "model": "string (required)",
+        "prompt": "string (required)",
+        "max_tokens": "int?",
+        "temperature": "double?",
+        "top_p": "double?",
+        "stop": "List<string>"
+      }
+    },
+    {
+      "name": "CompletionResponse",
+      "description": "文本完成响应",
+      "fields": {
+        "model": "string",
+        "choices": "List<CompletionChoice> - [{text, index, finish_reason}]",
+        "usage": "Usage",
+        "windows_metrics": "WindowsMetrics - {processor_time_ms, working_set_mb, gpu_engine_utilization}",
+        "security_context": "SecurityContext - {user, session_id, integrity_level}"
+      }
+    },
+    {
+      "name": "ModelInfo",
+      "description": "模型信息",
+      "fields": {
+        "id": "string",
+        "name": "string",
+        "format": "string - (safetensors/pytorch/onnx/gguf)",
+        "version": "string",
+        "description": "string",
+        "status": "string - (ready/not_loaded)",
+        "loaded_at": "long - Unix时间戳",
+        "specs": "ModelSpecs - {context_size, vocab_size, architecture}",
+        "resources": "ModelResources - {gpu_id, vram_used, strategy}",
+        "paths": "ModelPaths - {model, config}",
+        "windows_security": "WindowsSecurity - {owner, acl, encrypted}"
+      }
+    },
+    {
+      "name": "EngineInfo",
+      "description": "引擎信息",
+      "fields": {
+        "Id": "string",
+        "Name": "string",
+        "Version": "string",
+        "Formats": "string[] - 支持的格式",
+        "Endpoint": "string - 服务端点URL",
+        "HealthEndpoint": "string - 健康检查端点",
+        "Capabilities": "EngineCapabilities - {MaxBatchSize, MaxTokens, SupportsStreaming, GpuEnabled, MemoryRequirement}",
+        "Status": "string - (healthy/unhealthy)",
+        "LastHeartbeat": "DateTime - ISO8601格式"
+      }
+    },
+    {
+      "name": "EngineRegistrationRequest",
+      "description": "引擎注册请求",
+      "fields": {
+        "Id": "string (required)",
+        "Name": "string",
+        "Version": "string",
+        "Formats": "string[]",
+        "Endpoint": "string (required)",
+        "HealthEndpoint": "string",
+        "Capabilities": "EngineCapabilities",
+        "Status": "string"
+      }
+    },
+    {
+      "name": "SystemInfo",
+      "description": "系统信息",
+      "fields": {
+        "HostName": "string",
+        "OSName": "string",
+        "OSVersion": "string",
+        "ProcessorCount": "int",
+        "Is64Bit": "bool",
+        "MachineName": "string",
+        "UserName": "string",
+        "DomainName": "string",
+        "SystemDirectory": "string",
+        "TickCount": "int",
+        "WorkingSet": "long",
+        "Uptime": "TimeSpan"
+      }
+    },
+    {
+      "name": "GpuInfo",
+      "description": "GPU信息",
+      "fields": {
+        "Name": "string - GPU名称",
+        "Description": "string",
+        "DriverVersion": "string - 驱动版本",
+        "DriverDate": "string - 驱动日期",
+        "AdapterRAM": "double - 显存大小(MB)",
+        "VideoProcessor": "string - 视频处理器",
+        "DeviceID": "string - 设备ID",
+        "PNPDeviceID": "string - 即插即用设备ID",
+        "Status": "string - 设备状态 (OK/Error)"
+      }
+    },
+    {
+      "name": "CpuInfo",
+      "description": "CPU信息",
+      "fields": {
+        "Name": "string - CPU名称",
+        "Description": "string",
+        "Manufacturer": "string - 制造商",
+        "NumberOfCores": "int - 核心数",
+        "NumberOfLogicalProcessors": "int - 逻辑处理器数",
+        "MaxClockSpeed": "int - 最大频率(MHz)",
+        "CurrentClockSpeed": "int - 当前频率(MHz)",
+        "CpuUsage": "double - CPU使用率(%)"
+      }
+    },
+    {
+      "name": "MemoryInfo",
+      "description": "内存信息",
+      "fields": {
+        "TotalPhysicalMemory": "double - 总物理内存(MB)",
+        "FreePhysicalMemory": "double - 可用物理内存(MB)",
+        "TotalVirtualMemory": "double - 总虚拟内存(MB)",
+        "FreeVirtualMemory": "double - 可用虚拟内存(MB)",
+        "ProcessWorkingSet": "double - 进程工作集(MB)"
+      }
+    },
+    {
+      "name": "ErrorResponse",
+      "description": "错误响应",
+      "fields": {
+        "error": {
+          "code": "string - 错误代码",
+          "message": "string - 错误信息",
+          "type": "string - 错误类型 (validation_error/system_error)",
+          "windows_error_code": "int - Windows错误码"
+        }
+      }
+    }
+  ],
+  "summary": {
+    "total_controllers": 8,
+    "total_endpoints": 40,
+    "total_internal_services": 3,
+    "total_data_models": 12,
+    "controllers": [
+      "ChatCompletionsController",
+      "CompletionsController",
+      "ModelsController",
+      "EngineController",
+      "RoutingController",
+      "ConfigController",
+      "SystemController",
+      "WindowsController"
+    ]
+  }
+}
